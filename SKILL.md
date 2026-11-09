@@ -35,10 +35,26 @@ time, skipping anything you can answer by looking:
 A workspace with no answer to a question gets `none` in that slot, and the steps below that
 depend on it are skipped rather than improvised.
 
-**Then read the playbook named in the profile.** It holds the running log of everything ingested
-and a lessons section that grows. This skill is the procedure; the playbook is the memory. Both
-get updated at the end of every run. If the playbook does not exist yet, create it with a log
-table and an empty lessons section.
+**Then read the playbook named in the profile**, specifically its "Rules in force" section: the
+short list of rules this workspace has learned, each with a count of how many lessons taught it
+and the date it was last broken anyway. If the playbook does not exist yet, create it with three
+parts: Rules in force, a running log table, and a Lessons section.
+
+**Then save the raw source to a file and run preflight.** This is not a summary of the steps
+below. It is the two steps that get skipped:
+
+```
+python3 scripts/preflight.py <source-file>
+```
+
+It prints today's real date, pulls every proper noun, acronym, email and URL out of the source,
+scans the workspace for each so "new here" is measured rather than felt, checks the URLs, and
+emits a header block to paste. Scope it with `--root <dir>` when a full scan is slow.
+
+Writing a rule down does not execute it. In the workspace this skill grew up in, the identity
+check and the date check were both written into the procedure on day one, and both were still
+being broken two and a half months later across 55 separate logged lessons. Prose gets skimmed.
+A command either ran or it did not.
 
 ---
 
@@ -197,17 +213,43 @@ unanswered, hours after an ingested email had answered all three.
 Do not hand-edit generated files. The profile lists which files in this workspace are generated
 and what regenerates them.
 
+## 6b. Run postflight before calling it done
+
+```
+python3 scripts/postflight.py <record.md> --source <source-file> --style "<your style regex>"
+```
+
+It diffs the raw-source block in the record against the source file character by character,
+fails the record if the ingest line does not say today, checks that the sections carrying a
+record's honesty are present, and greps your house style outside quoted material. Exit code 1
+means a blocker.
+
+The verbatim diff is the one check that cannot be done by reading. A record's raw-source section
+is supposed to be the source, and nothing in a read-through reveals that one character moved.
+If postflight says it checked nothing, it checked nothing.
+
 ## 7. Log it, and record anything learned
 
 In the playbook named in the profile:
 
 - Add a row to the running log: ingest date, source, where it was written.
-- If this ingest taught something, append a lesson. What happened, and what to do differently.
-  Append, never rewrite.
+- If this ingest taught something, append a lesson to the Lessons section. What happened, and
+  what to do differently.
 
 A lesson earns its place by being specific about the failure. "Be careful with dates" teaches
 nothing. "An entire session was stamped with the source's date and was self-consistent, so only
 running `date` caught it" teaches the check.
+
+**Before appending, check whether it is already a rule.** If the lesson belongs to a rule that
+already exists, do not write it again: raise that rule's count, update its last-broken date, and
+ask what check would have caught it. **A lesson written twice is a procedure gap, and the fix is
+usually a few lines in `scripts/`, not a third paragraph nobody reads.** Both scripts in this
+skill exist because a lesson was written for the nineteenth time.
+
+**Consolidate when the Lessons section outgrows a read.** Lessons are append-only and they pile
+up. Past roughly fifty, nobody reads them, including you, and step 0 quietly becomes a lie. Group
+them by rule, write the rules short, and move the full history to an archive file that is kept
+but not read on every run.
 
 ## 8. Before anything is handed over, check what moved
 

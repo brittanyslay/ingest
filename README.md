@@ -53,8 +53,30 @@ Copy `references/workspace-profile.example.md` to start it by hand instead.
 
 ```
 SKILL.md                                 the procedure
+scripts/preflight.py                     run before writing: date, names, URLs
+scripts/postflight.py                    run after writing: verbatim diff, dates, style
 scripts/workspace_scan.py                search text and Office files for a term
 references/workspace-profile.example.md  the profile template
+```
+
+**The two scripts are the point.** A procedure in prose gets skimmed. In the workspace this
+skill grew up in, the identity check and the date check were written into step one on day one,
+and 55 logged lessons later they were both still being broken. So the checkable parts are
+commands now.
+
+`preflight.py` prints today's real date, pulls the proper nouns, acronyms, emails and URLs out
+of the source, scans the workspace for each one, checks the URLs, and hands back a header block.
+
+`postflight.py` diffs the record's raw-source block against the source file character by
+character, fails the record if its ingest line does not say today, and checks the sections that
+carry a record's honesty are present. The verbatim diff is the only check here that cannot be
+done by reading: a raw-source section is supposed to be the source, and nothing in a read-through
+reveals that one character moved.
+
+```bash
+python3 scripts/preflight.py source.txt
+# write the record
+python3 scripts/postflight.py record.md --source source.txt
 ```
 
 `workspace_scan.py` searches `.docx`, `.pptx` and `.xlsx` by opening them as zips, because grep
