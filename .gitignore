@@ -1,0 +1,7 @@
+# The filled-in profile holds your workspace's folder names, paths and internal
+# terminology. It never leaves your machine.
+references/workspace-profile.md
+
+__pycache__/
+*.pyc
+.DS_Store
